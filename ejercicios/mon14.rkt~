@@ -1,0 +1,23 @@
+#lang play
+
+; car -> first
+; cdr -> rest
+
+;define a function named (add-pair-n pair n)
+; i.e  '(1 . 2) 5 -> '(6 . 7)
+
+(define (add-pair-n pair n)
+  (cons (+ (car pair) n)
+        (+ (cdr pair) n)))
+
+(define (test actual expected)
+  (if (equal? actual expected)
+      "Test passed"
+      (format "Test failed. Expected ~a but got ~a" expected actual)))
+
+(displayln (test (add-pair-n (cons 1 2) 5) (cons 6 7)))
+
+
+;(test (add-pair-n (cons 1 2) 5) (cons 6 7))
+
+

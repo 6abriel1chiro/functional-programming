@@ -1,0 +1,33 @@
+#lang play
+;Define una funcion (rango from to) que devuelva una lista
+;con el rango inclusivo de los argumentos.
+
+;(rango 3 7) --> '(3 4 5 6 7)
+(define (rango from to)
+  (cond
+    ((not (integer? from)) '())
+    ((not (integer? to)) '())
+    ((> from to) '())         
+    (else (build-list (+ (- to from) 1)
+                      (lambda (i) (+ from i))))))
+
+
+(rango 3 7)
+(rango 7 3)
+(display (rango "a" 7)) 
+
+
+
+;Usando esa funcion, defina una funcion (primo? num) que
+;devuelva si un numero es primo o no.
+
+
+
+(define (primo? num)
+  (cond
+    ((not (integer? num)) #f)        ; If num is not an integer, return #f
+    ((<= num 1) #f)                   ; If num is less than or equal to 1, return #f
+    ((= num 2) #t)                    ; 2 is prime
+    (else (not (any? (lambda (x)      ; Check if num is divisible by any number
+                       (= (modulo num x) 0))
+       

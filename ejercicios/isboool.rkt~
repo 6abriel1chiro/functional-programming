@@ -1,0 +1,14 @@
+#lang play
+;Define una funcion (xx lst) que recibe una lista de
+;booleanos y devuelve si #t si todos son booleanos.
+
+
+(define (isBool lst)
+  (andmap (λ (x) (boolean? x)) lst))
+
+
+
+(test (isBool '(#t)) #t)
+(test (isBool '(#t #f #t)) #f)
+(test (isBool '()) #t)
+(test (isBool '(#f)) #f)

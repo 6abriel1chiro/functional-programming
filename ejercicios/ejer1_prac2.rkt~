@@ -1,0 +1,38 @@
+#lang play
+
+
+; practica 1.2
+; 1. implementar map
+
+#|
+
+contract: map recibe una funcion y una lista y devuelve una nueva lista con los valores de aplicar la funcion a cada elemento de la lista original
+In: fun, lst
+Out: new-lst
+
+<map> ::= "map" "(" <function> "," <list> ")"
+<function> ::= <identifier>  ; Representa la funcion a aplicar
+<list> ::= "(" <expression-list> ")" 
+<expression-list> ::= <expression> . . .
+<expression> ::= ...  ; Representa una expresion de  la lista
+<identifier> ::= ...  ; Representa un identificador para la funcion
+
+|#
+
+
+
+(define (map fun lst)
+  (if (empty? lst)
+      '()
+      (cons(fun (first lst)) (map fun (rest lst))
+      )
+  )
+  )
+
+
+
+
+
+(test (map add1 '(1 2 3 4)) '(2 3 4 5))
+(test (map (λ (n)(* n 3)) '(2 4 6 8)) '(6 12 18 24))
+(test (map (λ (n)(* n 3)) '()) '())

@@ -46,12 +46,14 @@
   [gt l r]
   [lt l r]
   [with x ne b]
+  [id sym] 
   )
 
 
-; subst: <id> <AE> <AE> <AE> -> <AE> 
-(define (subst x ne b)
-""
+; subst: <id> <WAE> <WAE>  -> <WAE>
+; substituye todas las apariciones del id en el cuerpo por el valor
+(define (subst x ne expr)
+expr
   )
 ; interp :: Expr -> number?
 ; evalua una expresion aritmetica.
@@ -59,7 +61,7 @@
 (define (interp expr)
   (match expr
     [(num n) n]
-    [(id sym) (error "unidentified" sym)]
+    [(id sym) (error "unidentified: " sym)]
     [(bool b) b]
     [(add l r) (+ (interp l) (interp r))]
     [(sub l r) (- (interp l) (interp r))]
@@ -68,7 +70,7 @@
     [(if-tf c t f) (if (interp c) (interp t) (interp f))]
     [(gt l r) (> (interp l) (interp r))]
     [(lt l r) (< (interp l) (interp r))]
-    [(with x ne b) (interp(subst x (parse(interp ne))b))]
+    [(with x ne b) (interp(subst x (parse (interp ne)) b))]
   )
 )
 
@@ -86,7 +88,7 @@
     [(list 'if-tf cond true-expr false-expr) (if-tf (parse cond) (parse true-expr) (parse false-expr))]
     [(list '> l r) (gt (parse l) (parse r))]
     [(list '< l r) (lt (parse l) (parse r))]
-    [(list 'with (list id-name named-exp) body)
+    [(list 'with (list id-name named-expr) body)
        (with id-name (parse named-expr) (parse body))]
     )
   )
@@ -131,5 +133,6 @@
 
 
 
+(test/exn (run 'x) "unidentified")
 ; crear un nuevo let
 

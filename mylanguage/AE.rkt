@@ -48,32 +48,6 @@
   [with x ne b]
   [id sym] 
   )
-
-
-; subst: <id> <WAE> <WAE>  -> <WAE>
-; substituye todas las apariciones del id en el cuerpo por el valor
-(define (subst x ne expr)
-expr
-  )
-; interp :: Expr -> number?
-; evalua una expresion aritmetica.
-
-(define (interp expr)
-  (match expr
-    [(num n) n]
-    [(id sym) (error "unidentified: " sym)]
-    [(bool b) b]
-    [(add l r) (+ (interp l) (interp r))]
-    [(sub l r) (- (interp l) (interp r))]
-    [(mult vals) (foldl * 1 (map interp vals))]
-    [(neg n) (- (interp n))]
-    [(if-tf c t f) (if (interp c) (interp t) (interp f))]
-    [(gt l r) (> (interp l) (interp r))]
-    [(lt l r) (< (interp l) (interp r))]
-    [(with x ne b) (interp(subst x (parse (interp ne)) b))]
-  )
-)
-
 ; parse: Src -> Expr
 ; parsea codigo fuente
 (define (parse src)
@@ -92,6 +66,51 @@ expr
        (with id-name (parse named-expr) (parse body))]
     )
   )
+
+; subst: <id> <WAE> <WAE>  -> <WAE>
+; substituye todas las apariciones del id en el cuerpo por el valor
+(define (subst x v e)
+  (match e
+    [(num n) e]
+    [(id sym) (if (eq? x sym) v e)]
+    [(add l r) (add (subst x v l) (subst x v r))]
+    [(sub l r) (sub (subst x v l) (subst x v r))]
+    ;[(mult vals) (foldl * 1 (map interp vals))]
+    ;[(if-tf c t f) (if (interp c) (interp t) (interp f))]
+    ;[(gt l r) (> (interp l) (interp r))]
+    ;[(lt l r) (< (interp l) (interp r))]
+    [(with id ne b)
+     (with id
+           (subst x v ne)
+           (if (eq? x id)
+               b
+               (subst x v b)
+               ))]
+   )
+ )
+  
+
+
+; interp :: Expr -> number?
+; evalua una expresion aritmetica.
+
+(define (interp expr)
+  (match expr
+    [(num n) n]
+    [(id sym) (error "unidentified free variable: " sym)]
+    [(bool b) b]
+    [(add l r) (+ (interp l) (interp r))]
+    [(sub l r) (- (interp l) (interp r))]
+    [(mult vals) (foldl * 1 (map interp vals))]
+    [(neg n) (- (interp n))]
+    [(if-tf c t f) (if (interp c) (interp t) (interp f))]
+    [(gt l r) (> (interp l) (interp r))]
+    [(lt l r) (< (interp l) (interp r))]
+    [(with x ne b) (interp(subst x (parse (interp ne)) b))]; {with {x ne} b}
+  )
+)
+
+
   
 
 
@@ -134,5 +153,23 @@ expr
 
 
 (test/exn (run 'x) "unidentified")
-; crear un nuevo let
+
+
+
+(let ([x 3])
+  (let ([x x])
+    (+ x x)
+    )
+  )
+
+
+(test (run '{with {x 3} 2}) 2)
+(test (run '{with {x 3} x}) 3)
+(test (run '{with {x 3} {with {y 4} x}}) 3)
+(test (run '{with {x 3} {+ x 4}}) 7)
+(test (run '{with {x 3} {with {x 10} {+ x x}}}) 20)
+(test (run '{with {x 3} {with {x x} {+ x x}}}) 6)
+(test (run '{with {x 3} {with {y 2} {+ x y}}}) 5)
+(test (run '{with {x 3} {+ 1 {with {y 2} {+ x y}}}}) 6)
+(test (run '{with {x 3} {with {y {+ 2 x}} {+ x y}}}) 8)
 

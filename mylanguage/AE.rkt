@@ -75,7 +75,7 @@
     [(id sym) (if (eq? x sym) v e)]
     [(add l r) (add (subst x v l) (subst x v r))]
     [(sub l r) (sub (subst x v l) (subst x v r))]
-    ;[(mult vals) (foldl * 1 (map interp vals))]
+    [(mult vals) (mult(map (λ (a) (subst x v a)) vals))]
     ;[(if-tf c t f) (if (interp c) (interp t) (interp f))]
     ;[(gt l r) (> (interp l) (interp r))]
     ;[(lt l r) (< (interp l) (interp r))]
@@ -173,3 +173,9 @@
 (test (run '{with {x 3} {+ 1 {with {y 2} {+ x y}}}}) 6)
 (test (run '{with {x 3} {with {y {+ 2 x}} {+ x y}}}) 8)
 
+
+
+
+
+
+ (run '{with {x 3} {* x 4}})

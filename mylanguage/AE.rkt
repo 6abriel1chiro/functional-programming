@@ -29,6 +29,10 @@
            | (+ <WAE> <WAE>)
  | (- <WAE> <WAE>)
  | (with <id> <WAE> <WAE>)
+ | (APP <id>  <WAE>)
+
+
+
 
 
 |#
@@ -46,8 +50,10 @@
   [gt l r]
   [lt l r]
   [with x ne b]
-  [id sym] 
+  [id sym]
+  [app fname arg]
   )
+; <fundef> L= define (<id> <id>) <expr>
 ; parse: Src -> Expr
 ; parsea codigo fuente
 (define (parse src)

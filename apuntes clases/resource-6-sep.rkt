@@ -27,6 +27,23 @@
   
   )
 
+
+
+; fun-parse
+(define (fun-parse)
+  (match (next-token) ; Assuming you have a function to get the next token
+    ['define (next-token) ; Assuming 'define' is the first token
+     (match (next-token)
+       [`{ ,(define-id id1) ,(define-id id2) ,(expr body)}
+        (fundef id1 id2 body)]
+       [_ (error "Invalid function definition syntax")]
+     )]
+    [_ (error "Invalid function definition syntax")]
+  ))
+
+
+
+
 ; parse: Src -> Expr
 ; parsea codigo fuente
 (define (parse src)
@@ -98,9 +115,17 @@
 
 ; run: Src list<fundef>? -> Expr
 ; corre un programa
-(define (run prog  [fundefs (list (fundef 'foo 'x (parse '(+ x 5))) )])
-  (interp (parse prog) fundefs)
-  )
+(define (run prog [fundefs '()])
+  (if (null? fundefs)
+      (set! fundefs ; Set fundefs to some predefined functions or leave it empty
+            '(
+              (fundef foo '() 12)
+              ; Add more predefined functions if needed
+             ))
+      fundefs)
+
+  (interp (parse prog) fundefs))
+
 
 (test (run '{+ 3 4}) 7)
 (test (run '{- 5 1}) 4)
@@ -116,4 +141,4 @@
 (test (run '{with {x 3} {with {y {+ 2 x}} {+ x y}}}) 8)
 (test (run '{with {x 3} {if-tf {+ x 1} {+ x 3} {+ x 9}}}) 6)
 
-(run '{foo 11})
+(run '{+ 3 12})

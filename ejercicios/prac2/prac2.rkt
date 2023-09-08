@@ -30,10 +30,11 @@
 
 <WAE> ::=   <num> | <bool> <id>
            | (+ <WAE> <WAE>)
- | (- <WAE> <WAE>)
- | (with <id> <WAE> <WAE>)
- | (APP <id>  <WAE>)
-
+           | (- <WAE> <WAE>)
+           | (with <id> <WAE> <WAE>)
+           | (withN <list> <WAE>)
+           | (APP <id>  <WAE>)
+ 
 
 
 
@@ -73,6 +74,8 @@
     [(list '< l r) (lt (parse l) (parse r))]
     [(list 'with (list id-name named-expr) body)
        (with id-name (parse named-expr) (parse body))]
+    [(list 'withN assignments body)
+     (parse (foldr (λ (assignment acc) `(with ,assignment ,acc)) body assignments))]
     )
   )
 
@@ -88,13 +91,11 @@
     [(if-tf c t f) (if (interp c) (interp t) (interp f))]
     [(gt l r) (> (interp l) (interp r))]
     [(lt l r) (< (interp l) (interp r))]
-    [(with id ne b)
-     (with id
-           (subst x v ne)
-           (if (eq? x id)
-               b
-               (subst x v b)
-               ))]
+    [(with y ne b)
+     (if (eq? x y)
+         (with y (subst x v ne) b)
+         (with y (subst x v ne) (subst x v b)))
+    ]
    )
  )
   
@@ -189,5 +190,47 @@ Haz las modificaciones necesarias para que pueda soportar  withN de la siguiente
 
 Escribe pruebas para demostrar tu implementación
 |#
+
+; Test cases for withN 
+(test (run '{withN {{x 2} {y 3} {z 1}} {+ x {+ y z}}}) 6)
+
+(test (run '{withN {{x 2} {y 3}} {withN {{a 1} {b 4}} {+ x {+ y {+ a b}}}}}) 10)
+(test (run '{withN {{x 2} {y 3}} {withN {{x 1} {z 5}} {+ x {+ y z}}}}) 9)
+(test (run '{withN {{x 2}} x}) 2)
+(test (run '{withN {} 42}) 42)
+
+#|
+3. free-vars (3pts)
+Ahora que ya sabemos qué son las ocurrencias libres, también sabemos que si al interpretar nos encontramos con una de ellas
+esperamos un error (pues esto quiere decir que no han sido substituidas). Crea la función (free-vars expr) que recibe una
+expresión y devuelve la lista de ocurrencias libres de la expresión:
+
+
+(test (free-vars (parse '{+ x {+ z 3}})) '(x z))
+(test (free-vars (parse 'x)) '(x))
+ Escribe pruebas para casos con with.
+|#
+
+
+#|
+4. count-nums (2pts)
+Sobre el AST, opera distintas funciones, en particular, las funciones de analyze recorren el árbol y extraen información o
+alguna propiedad interesante. Ahora implementarás una función simple de analyze, (count-nums expr) que recorre una expresión
+y devuelve la cantidad de constantes numéricas en la expresión.
+
+(test (count-nums (add (num 3) (num 2))) 2)
+
+Escribe pruebas para la función e impleméntala. 
+|#
+
+
+#|
+(define (countNums)
+(match expr
+   [(if ( eq? expr 1) 1 0)]
+  )
+  |#
+  
+
 
 

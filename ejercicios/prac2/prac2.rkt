@@ -208,7 +208,7 @@ expresión y devuelve la lista de ocurrencias libres de la expresión:
     [(mult vals) (foldl (λ (v acc) (append (free-vars v) acc)) '() vals)]
     [(neg n) (free-vars n)]
     [(if-tf c t f) (append (free-vars c) (append (free-vars t) (free-vars f)))]
-    [(with x ne b) (append (remove-duplicates (free-vars b)) (remove x (free-vars ne)))]
+    [(with x ne b) (free-vars(subst x ne b))]
   ))
 
 
@@ -216,13 +216,13 @@ expresión y devuelve la lista de ocurrencias libres de la expresión:
 
 (test (free-vars (parse 'x)) '(x))
 
-; Test case 3: Free variable inside a with expression
+; Test case: dentro de with
 (test (free-vars (parse '{with {x 2} {+ x y}})) '(y))
 
-; Test case 4: Free variable outside a with expression
+; Test case: fuera de with
 (test (free-vars (parse '{with {x 2} {+ x {+ y 1}}})) '(y))
 
-; Test case 5: Multiple free variables inside a with expression
+; Test case: Multiples dentro de with
 (test (free-vars (parse '{with {x 2} {+ x {+ y z}}})) '(y z))
 
 
@@ -246,16 +246,16 @@ Escribe pruebas para la función e impleméntala.
     [(sub l r) (+ (count-nums l) (count-nums r))] ; Similar para la resta.
     [(mult vals) (foldl (λ (v acc) (+ acc (count-nums v))) 0 vals)] ; Sumamos los resultados de la multiplicación.
     [(neg n) (count-nums n)] ; Consideramos el número dentro de la negación.
-    [(bool _) 0] ; No contamos las constantes booleanas.
+    [(bool b) 0] ; No contamos las constantes booleanas.
     [(if-tf c t f) (+ (count-nums c) (count-nums t) (count-nums f))] ; Sumamos los resultados de las ramas if.
-    [(with _ ne b) (+ (count-nums ne) (count-nums b))] ; Sumamos los resultados de las subexpresiones de with.
-    [(id _) 0] ; No contamos las variables.
+    [(with i ne b) (    + (count-nums ne) (count-nums (subst i ne b) ))   ] ; Sumamos los resultados de las subexpresiones de with.
+    [(id i) 0] ; No contamos las variables.
    )
   )
 
 ; Pruebas
 (test (count-nums (add (num 3) (num 2))) 2)
 (test (count-nums (add (num 3) (sub (num 5) (num 1)))) 3)
-(test (count-nums (parse '{with {x 2} {+ x {+ y 1}}})) 2)
-;(test (count-nums (parse '{with {x 2} {+ x {+ y z}}})) 2)
-;(test (count-nums (parse '{with {x 2} {+ x {+ y z}}})) 3)
+(test (count-nums (parse '{with {x 2} {+ x {+ y 1}}})) 3)
+(test (count-nums (parse '{with {x 2} {+ x {+ y z}}})) 2)
+

@@ -111,7 +111,34 @@
 )
 
 
-  
+; free vars:: Expr -> list
+;retorna una lista de variables de ocurrencias libres de una expresion
+
+; Define the free-vars function
+(define (free-vars expr)
+  (match expr
+    [(num _) '()] ; Numbers have no free variables
+    [(bool _) '()] ; Booleans have no free variables
+    [(id sym) (list sym)] ; An identifier is a free variable
+    [(add l r) (append (free-vars l) (free-vars r))]
+    [(sub l r) (append (free-vars l) (free-vars r))]
+    [(mult vals) (foldl (λ (v acc) (append (free-vars v) acc)) '() vals)]
+    [(neg n) (free-vars n)]
+    [(if-tf c t f) (append (free-vars c) (append (free-vars t) (free-vars f)))]
+    [(with x ne b) (append (remove-duplicates (free-vars b)) (remove x (free-vars ne)))]
+   )
+  )
+
+; Helper function to remove duplicates from a list
+(define (remove-duplicates lst)
+  (if (null? lst) '()
+      (cons (car lst)
+            (remove-duplicates (filter (λ (x) (not (eq? x (car lst)))) (cdr lst))))))
+
+; Helper function to remove an element from a list
+(define (remove x lst)
+  (filter (λ (y) (not (eq? x y))) lst))
+
 
 
 
@@ -192,8 +219,27 @@ expresión y devuelve la lista de ocurrencias libres de la expresión:
 (test (free-vars (parse '{+ x {+ z 3}})) '(x z))
 (test (free-vars (parse 'x)) '(x))
  Escribe pruebas para casos con with.
-|#
 
+
+; Testing  free-vars function
+(test (free-vars (parse '{+ x {+ z 3}})) '(x z))
+(test (free-vars (parse 'x)) '(x))
+; Test case 1: Simple with expression
+(test (free-vars (parse '{with {x 2} {+ x 4}})) '())
+
+; Test case 2: Nested with expressions
+(test (free-vars (parse '{with {x 2} {with {y 3} {with {z 1} {+ x {+ y z}}}}})) '())
+
+; Test case 3: Free variable inside a with expression
+(test (free-vars (parse '{with {x 2} {+ x y}})) '(y) )
+
+; Test case 4: Free variable outside a with expression
+(test (free-vars (parse '{with {x 2} {+ x {+ y 1}}} ) ) '(y ))
+
+; Test case 5: Multiple free variables inside a with expression
+(test (free-vars (parse '{with {x 2} {+ x {+ y z}}})) '(y z) )
+
+  |#
 
 #|
 4. count-nums (2pts)
@@ -207,13 +253,23 @@ Escribe pruebas para la función e impleméntala.
 |#
 
 
-#|
-(define (countNums)
-(match expr
-   [(if ( eq? expr 1) 1 0)]
+(define (count-nums expr)
+  (match expr
+    [(num _) 1] ; Si encontramos una constante numérica, devolvemos 1.
+    [(add l r) (+ (count-nums l) (count-nums r))] ; Sumamos los resultados de las subexpresiones.
+    [(sub l r) (+ (count-nums l) (count-nums r))] ; Similar para la resta.
+    [(mult vals) (foldl (λ (v acc) (+ acc (count-nums v))) 0 vals)] ; Sumamos los resultados de la multiplicación.
+    [(neg n) (count-nums n)] ; Consideramos el número dentro de la negación.
+    [(bool _) 0] ; No contamos las constantes booleanas.
+    [(if-tf c t f) (+ (count-nums c) (count-nums t) (count-nums f))] ; Sumamos los resultados de las ramas if.
+    [(with _ ne b) (+ (count-nums ne) (count-nums b))] ; Sumamos los resultados de las subexpresiones de with.
+    [(id _) 0] ; No contamos las variables.
+   )
   )
-  |#
-  
+
+; Pruebas
+(test (count-nums (add (num 3) (num 2))) 2)
+(test (count-nums (add (num 3) (sub (num 5) (num 1)))) 3)
 
 
 

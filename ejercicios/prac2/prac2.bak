@@ -18,17 +18,27 @@
            | (gt <Expr> <Expr>)
            | (lt <Expr> <Expr>)
            | (if-tf <AE> <AE> <AE>)
-           | (WITH <list> <WAE> )
+
+           | (WITH )
+           | ()
+
+
+
 |#
-
-
 #|
+
+
 <WAE> ::=   <num> | <bool> <id>
            | (+ <WAE> <WAE>)
            | (- <WAE> <WAE>)
            | (with <id> <WAE> <WAE>)
            | (withN <list> <WAE>)
            | (APP <id>  <WAE>)
+ 
+
+
+
+
 |#
 
 
@@ -129,6 +139,14 @@
 (test (run '{- {+ 2 3}}) -5)
 (test (run '{* 2 3 4}) 24)
 
+#|
+
+(* 3 2)
+(* 1 2 3 4 5)
+
+
+|#
+
 (test (run '(if-tf #t (+ 1 1) (- 1 1)))2)
 
 (test (run '(if-tf #f (+ 1 1) (- 1 1)))0)
@@ -148,7 +166,6 @@
 
 
 #|
-PRACTICA 2
 1. * infinita
 Modifica el lenguaje para que soporte multiplicación infinita y actualize el type checking (2pts)
 (test (run '{* 1 1 1 1}) 1)

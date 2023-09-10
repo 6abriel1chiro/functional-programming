@@ -1,0 +1,17 @@
+#lang play
+
+  ; Contract: my-foldr takes a function, an initial value, and a list as arguments,
+  ;          and applies the function to the elements of the list in a right-to-left manner.
+  ; Input:   fun - a function that takes two arguments
+  ;          initVal - the initial value for the folding operation
+  ;          lst - the list of values to fold
+  ; Output:  The result of applying the folding function to the elements of the list.
+(define (my-foldr fun initVal lst)
+  (cond
+    ((empty? lst) initVal)
+    (else (fun (car lst) (my-foldr fun initVal (cdr lst))))))
+
+; Test the my-foldr function
+(define numbers '(1 2 3 4 5))
+(define result (my-foldr + 0 numbers))
+(display result) ; Output: 15

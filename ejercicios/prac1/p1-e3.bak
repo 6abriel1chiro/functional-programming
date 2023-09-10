@@ -1,0 +1,22 @@
+#lang play
+
+; 4 - rember
+
+
+
+
+; 5 - Rinsert
+
+
+
+
+
+(define (rember a lat)
+  (cond ((empty? lat) '())
+        ((equal? (car lat) a) (cdr lat))
+        (else (cons (car lat) (rember a (cdr lat))))))
+
+
+(define my-list '(lamb chops and mint jelly))
+(define result (rember "mint" my-list))
+(display result) ; Output: (lamb chops and jelly)

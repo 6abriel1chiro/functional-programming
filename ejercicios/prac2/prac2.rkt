@@ -111,35 +111,6 @@
 )
 
 
-; free vars:: Expr -> list
-;retorna una lista de variables de ocurrencias libres de una expresion
-
-; Define the free-vars function
-(define (free-vars expr)
-  (match expr
-    [(num _) '()] ; Numbers have no free variables
-    [(bool _) '()] ; Booleans have no free variables
-    [(id sym) (list sym)] ; An identifier is a free variable
-    [(add l r) (append (free-vars l) (free-vars r))]
-    [(sub l r) (append (free-vars l) (free-vars r))]
-    [(mult vals) (foldl (λ (v acc) (append (free-vars v) acc)) '() vals)]
-    [(neg n) (free-vars n)]
-    [(if-tf c t f) (append (free-vars c) (append (free-vars t) (free-vars f)))]
-    [(with x ne b) (append (remove-duplicates (free-vars b)) (remove x (free-vars ne)))]
-   )
-  )
-
-; Helper function to remove duplicates from a list
-(define (remove-duplicates lst)
-  (if (null? lst) '()
-      (cons (car lst)
-            (remove-duplicates (filter (λ (x) (not (eq? x (car lst)))) (cdr lst))))))
-
-; Helper function to remove an element from a list
-(define (remove x lst)
-  (filter (λ (y) (not (eq? x y))) lst))
-
-
 
 
 
@@ -221,6 +192,36 @@ expresión y devuelve la lista de ocurrencias libres de la expresión:
  Escribe pruebas para casos con with.
 
 
+; free vars:: Expr -> list
+;retorna una lista de variables de ocurrencias libres de una expresion
+
+; Define the free-vars function
+(define (free-vars expr)
+  (match expr
+    [(num _) '()] ; Numbers have no free variables
+    [(bool _) '()] ; Booleans have no free variables
+    [(id sym) (list sym)] ; An identifier is a free variable
+    [(add l r) (append (free-vars l) (free-vars r))]
+    [(sub l r) (append (free-vars l) (free-vars r))]
+    [(mult vals) (foldl (λ (v acc) (append (free-vars v) acc)) '() vals)]
+    [(neg n) (free-vars n)]
+    [(if-tf c t f) (append (free-vars c) (append (free-vars t) (free-vars f)))]
+    [(with x ne b) (append (remove-duplicates (free-vars b)) (remove x (free-vars ne)))]
+   )
+  )
+
+; Helper function to remove duplicates from a list
+(define (remove-duplicates lst)
+  (if (null? lst) '()
+      (cons (car lst)
+            (remove-duplicates (filter (λ (x) (not (eq? x (car lst)))) (cdr lst))))))
+
+; Helper function to remove an element from a list
+(define (remove x lst)
+  (filter (λ (y) (not (eq? x y))) lst))
+
+
+
 ; Testing  free-vars function
 (test (free-vars (parse '{+ x {+ z 3}})) '(x z))
 (test (free-vars (parse 'x)) '(x))
@@ -271,5 +272,6 @@ Escribe pruebas para la función e impleméntala.
 (test (count-nums (add (num 3) (num 2))) 2)
 (test (count-nums (add (num 3) (sub (num 5) (num 1)))) 3)
 
-
-
+(test (count-nums (parse '{with {x 2} {+ x {+ y 1}}})) 2)
+;(test (count-nums (parse '{with {x 2} {+ x {+ y z}}})) 2)
+;(test (count-nums (parse '{with {x 2} {+ x {+ y z}}})) 3)

@@ -101,7 +101,10 @@
     [(bool b) b]
     [(add l r) (+ (interp l) (interp r))]
     [(sub l r) (- (interp l) (interp r))]
-    [(mult vals) (foldl * 1 (map interp vals))]
+     [(mult vals)
+     (if (andmap number? (map interp vals))
+         (foldl * 1 (map interp vals))
+         (error "error: incorrect type"))] ; Type checking for multiplication
     [(neg n) (- (interp n))]
     [(if-tf c t f) (if (interp c) (interp t) (interp f))]
     [(gt l r) (> (interp l) (interp r))]
@@ -154,7 +157,7 @@ Modifica el lenguaje para que soporte multiplicación infinita y actualize el ty
 |#
 
 (test (run '{* 1 1 1 1}) 1)
-;(test/exn (run '{* 1 #t 1 1}) "error: incorrect type")
+(test/exn (run '{* 1 #t 1 1}) "error: incorrect type")
 
 
 #|
@@ -190,12 +193,11 @@ expresión y devuelve la lista de ocurrencias libres de la expresión:
 (test (free-vars (parse '{+ x {+ z 3}})) '(x z))
 (test (free-vars (parse 'x)) '(x))
  Escribe pruebas para casos con with.
-
+ |#
 
 ; free vars:: Expr -> list
 ;retorna una lista de variables de ocurrencias libres de una expresion
 
-; Define the free-vars function
 (define (free-vars expr)
   (match expr
     [(num _) '()] ; Numbers have no free variables
@@ -207,40 +209,23 @@ expresión y devuelve la lista de ocurrencias libres de la expresión:
     [(neg n) (free-vars n)]
     [(if-tf c t f) (append (free-vars c) (append (free-vars t) (free-vars f)))]
     [(with x ne b) (append (remove-duplicates (free-vars b)) (remove x (free-vars ne)))]
-   )
-  )
-
-; Helper function to remove duplicates from a list
-(define (remove-duplicates lst)
-  (if (null? lst) '()
-      (cons (car lst)
-            (remove-duplicates (filter (λ (x) (not (eq? x (car lst)))) (cdr lst))))))
-
-; Helper function to remove an element from a list
-(define (remove x lst)
-  (filter (λ (y) (not (eq? x y))) lst))
+  ))
 
 
-
-; Testing  free-vars function
 (test (free-vars (parse '{+ x {+ z 3}})) '(x z))
-(test (free-vars (parse 'x)) '(x))
-; Test case 1: Simple with expression
-(test (free-vars (parse '{with {x 2} {+ x 4}})) '())
 
-; Test case 2: Nested with expressions
-(test (free-vars (parse '{with {x 2} {with {y 3} {with {z 1} {+ x {+ y z}}}}})) '())
+(test (free-vars (parse 'x)) '(x))
 
 ; Test case 3: Free variable inside a with expression
-(test (free-vars (parse '{with {x 2} {+ x y}})) '(y) )
+(test (free-vars (parse '{with {x 2} {+ x y}})) '(y))
 
 ; Test case 4: Free variable outside a with expression
-(test (free-vars (parse '{with {x 2} {+ x {+ y 1}}} ) ) '(y ))
+(test (free-vars (parse '{with {x 2} {+ x {+ y 1}}})) '(y))
 
 ; Test case 5: Multiple free variables inside a with expression
-(test (free-vars (parse '{with {x 2} {+ x {+ y z}}})) '(y z) )
+(test (free-vars (parse '{with {x 2} {+ x {+ y z}}})) '(y z))
 
-  |#
+
 
 #|
 4. count-nums (2pts)
@@ -271,7 +256,6 @@ Escribe pruebas para la función e impleméntala.
 ; Pruebas
 (test (count-nums (add (num 3) (num 2))) 2)
 (test (count-nums (add (num 3) (sub (num 5) (num 1)))) 3)
-
 (test (count-nums (parse '{with {x 2} {+ x {+ y 1}}})) 2)
 ;(test (count-nums (parse '{with {x 2} {+ x {+ y z}}})) 2)
 ;(test (count-nums (parse '{with {x 2} {+ x {+ y z}}})) 3)

@@ -64,7 +64,7 @@
     [(list '< l r) (lt (parse l) (parse r))]
     [(list 'with (list id-name named-expr) body)
        (with id-name (parse named-expr) (parse body))]
-    [(list 'withN assignments body)
+    [(list 'withN assignments body) ;ejercicio 2 : agregamos funcionalidad al with llamandolo dentro de withN y mapeando los parametros (para este me ayudo el chat porque yo intente a mando con foldr y no me salia)
      (parse (foldr (λ (assignment acc) `(with ,assignment ,acc)) body assignments))]
     )
   )
@@ -162,7 +162,7 @@ Modifica el lenguaje para que soporte multiplicación infinita y actualize el ty
 
 #|
 
-2. withN (3pts)
+2. withN (3pts) (discutido con rodrigo guardia y chatgpt)
 Actualmente, el lenguaje WAE soporta with con sólo una variable:
 {with {x 2} {+ x 4}}
 

@@ -139,6 +139,7 @@
 
 
 
+
 ; run: Src list<fundef>? -> Expr
 ; corre un programa
 (define (run prog [fundefs '()])
@@ -178,6 +179,9 @@
 (test (count-fun (parse '{+ 1 5 })) 0)
 (test (count-fun (parse '{{foo 3} {bar 5}})) 2)
 (test (count-fun (parse '{if-tf #t {foo 3} {bar 5}})) 2)
-;
+
 ;{list 'define '(fact x) (if-tf (eq? x 0) 1 '(* x (fact (- x 1))))}
+
+
+(run '(with (f 3) (f f) )(list '(define (f x) x) ))
 

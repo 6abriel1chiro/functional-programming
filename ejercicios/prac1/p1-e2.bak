@@ -1,0 +1,11 @@
+#lang play
+
+
+
+(define (power base exponent)
+  (if (= exponent 0)
+      1
+      (* base (power base (- exponent 1)))))
+
+(test (power 2 0) 1 )
+

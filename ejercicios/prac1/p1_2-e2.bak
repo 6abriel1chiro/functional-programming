@@ -1,0 +1,6 @@
+#lang play
+
+
+; ejer 2 prac 1.2
+
+;Define una función recursiva que emule el comportamiento de foldr: (define (my-foldr fun initVal lst))

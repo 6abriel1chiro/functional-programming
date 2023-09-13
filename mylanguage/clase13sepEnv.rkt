@@ -30,37 +30,26 @@
   (fundef fname arg body)
   
   )
-
-
-
-
 #|
-<env> ::= (mtyEnv)
-       | (aEnv <id> <val> <env>)
+<env>::={mtEnv}
+  |(<id> <val> <env>)
 |#
-
 
 (deftype Env
   (mtEnv)
   (aEnv id val env)
   )
-
-;empty-env -> (mtEnv)
+;empty-env ->(mtEnv)
 (define empty-env (mtEnv))
-
-;extend-env:: <id> <val> <env> -> <env>
- (define extend-env aEnv)
-
-;env-lookup:: <id> <env> -> <val>
-(define  (env-lookup x env)
+;extend-env::<id> <val> <env>-><env>
+(define extend-env aEnv )
+;env-lookup::<id> <env>-> <val>
+(define (env-lookup x env)
   (match env
-    [(mtEnv) (error "unidentified: " x)]
+    [(mtEnv) (error "Theres no such identifier")]
+    [(aEnv id val nextEnv) (if (eq? x id) val (env-lookup x nextEnv))]
     
-    )
-  )
-
-
-
+    ))
 
 
 ;funParse:src->expr
@@ -127,25 +116,28 @@
 
 ; interp :: Expr List(fundefs) -> val
 
-(define (interp expr fundefs)
+
+(define (interp expr fundefs env)
   (match expr
     [(num n) n]
     [(bool b) b]
-    [(id x) (error "undefined: " x)]
-    [(mult x y) (* (interp x fundefs) (interp y fundefs))]
-    [(eqN? x y) (= (interp x fundefs) (interp y fundefs))]
-    [(evenN? n) (if (= (modulo (interp n fundefs) 2) 0) #t #f)]
-    [(add l r) (+ (interp l fundefs) (interp r fundefs))]
-    [(sub l r) (- (interp l fundefs) (interp r fundefs))]
-    [(if-tf c et ef) (if (interp c fundefs)
-                         (interp et fundefs)
-                         (interp ef fundefs))]
+    [(id x) (env-lookup x env)] ; buscar el valor de x
+    [(mult x y) (* (interp x fundefs env) (interp y fundefs env))]
+    [(eqN? x y) (= (interp x fundefs env) (interp y fundefs env))]
+    [(evenN? n) (if (= (modulo (interp n fundefs env) 2) 0) #t #f)]
+    [(add l r) (+ (interp l fundefs env) (interp r fundefs env))]
+    [(sub l r) (- (interp l fundefs env) (interp r fundefs env))]
+    [(if-tf c et ef) (if (interp c fundefs env)
+                         (interp et fundefs env)
+                         (interp ef fundefs env))]
     [(with x e b) ; {with {x e} b}
-     (interp (subst x (parse (interp e interp)) b) fundefs)]
+     (interp b fundefs (extend-env x (interp e fundefs env) env))]
+     ;(interp (subst x (parse (interp e interp)) b) fundefs env)]
     [(app fname arg)
-     (def (fundef name argName body) (lookUpFundef fname fundefs))
-
-     (interp (subst argName (parse (interp arg fundefs)) body) fundefs)
+     (def (fundef name argName body) (lookUpFundef fname fundefs ))
+     (interp body fundefs (extend-env argName (interp arg fundefs env) mtEnv))
+     ;(interp body fundefs (extend-env argName (interp arg fundefs env) env))
+     ;(interp (subst argName (parse (interp arg fundefs)) body) fundefs env)
      ]
 ))
 (define (count-fun expr )
@@ -168,16 +160,11 @@
      ]
 ))
 
-; environments (diccionarios para reemplazos)
-
-
-
-
 ; run: Src list<fundef>? -> Expr
 ; corre un programa
 (define (run prog [fundefs '()])
   
-  (interp (parse prog) (map fun-parse fundefs))
+  (interp (parse prog) (map fun-parse fundefs) mtEnv)
   )
 ;
 
@@ -212,9 +199,11 @@
 (test (count-fun (parse '{+ 1 5 })) 0)
 (test (count-fun (parse '{{foo 3} {bar 5}})) 2)
 (test (count-fun (parse '{if-tf #t {foo 3} {bar 5}})) 2)
-
+;
 ;{list 'define '(fact x) (if-tf (eq? x 0) 1 '(* x (fact (- x 1))))}
 
-
-(run '(with (f 3) (f f) )(list '(define (f x) x) ))
+(test (env-lookup 'c (aEnv 'c 5 (mtEnv))) 5)
+(test (env-lookup 'Prueba (aEnv 'Prueba 20 (aEnv 'c 5 (mtEnv)))) 20)
+(test (env-lookup 'c (aEnv 'Prueba 20 (aEnv 'c 5 (mtEnv)))) 5)
+(test (env-lookup 'c (aEnv 'c 20 (aEnv 'c 5 (mtEnv)))) 20)
 

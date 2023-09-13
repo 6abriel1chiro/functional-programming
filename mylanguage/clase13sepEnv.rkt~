@@ -30,37 +30,26 @@
   (fundef fname arg body)
   
   )
-
-
-
-
 #|
-<env> ::= (mtyEnv)
-       | (aEnv <id> <val> <env>)
+<env>::={mtEnv}
+  |(<id> <val> <env>)
 |#
-
 
 (deftype Env
   (mtEnv)
   (aEnv id val env)
   )
-
-;empty-env -> (mtEnv)
+;empty-env ->(mtEnv)
 (define empty-env (mtEnv))
-
-;extend-env:: <id> <val> <env> -> <env>
- (define extend-env aEnv)
-
-;env-lookup:: <id> <env> -> <val>
-(define  (env-lookup x env)
+;extend-env::<id> <val> <env>-><env>
+(define extend-env aEnv )
+;env-lookup::<id> <env>-> <val>
+(define (env-lookup x env)
   (match env
-    [(mtEnv) (error "unidentified: " x)]
+    [(mtEnv) (error "Theres no such identifier")]
+    [(aEnv id val nextEnv) (if (eq? x id) val (env-lookup x nextEnv))]
     
-    )
-  )
-
-
-
+    ))
 
 
 ;funParse:src->expr
@@ -168,11 +157,6 @@
      ]
 ))
 
-; environments (diccionarios para reemplazos)
-
-
-
-
 ; run: Src list<fundef>? -> Expr
 ; corre un programa
 (define (run prog [fundefs '()])
@@ -212,9 +196,10 @@
 (test (count-fun (parse '{+ 1 5 })) 0)
 (test (count-fun (parse '{{foo 3} {bar 5}})) 2)
 (test (count-fun (parse '{if-tf #t {foo 3} {bar 5}})) 2)
-
+;
 ;{list 'define '(fact x) (if-tf (eq? x 0) 1 '(* x (fact (- x 1))))}
 
-
-(run '(with (f 3) (f f) )(list '(define (f x) x) ))
-
+(test (env-lookup 'c (aEnv 'c 5 (mtEnv))) 5)
+(test (env-lookup 'Prueba (aEnv 'Prueba 20 (aEnv 'c 5 (mtEnv)))) 20)
+(test (env-lookup 'c (aEnv 'Prueba 20 (aEnv 'c 5 (mtEnv)))) 5)
+(test (env-lookup 'c (aEnv 'c 20 (aEnv 'c 5 (mtEnv)))) 20)

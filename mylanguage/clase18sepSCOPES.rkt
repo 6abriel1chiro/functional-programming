@@ -30,7 +30,6 @@
   [mult x y]
   [app fName arg]
   [fun arg body]
-  
   )
 
 
@@ -59,7 +58,7 @@
 ;funParse:src->expr
 (define (fun-parse src)
 (match src
-  [(list 'define (list fname arg-name) body) (fundef fname arg-name (parse body))]
+  [(list 'define (list fname arg-name) body) ( fname arg-name (parse body))]
   )
   )
 ; parse: Src -> Expr
@@ -78,7 +77,7 @@
     [(list 'with (list x e) b) (with x (parse e) (parse b))]
     ; {fun {x} body}
     [(list 'fun (list x) body) (fun x (parse body)) ]
-    [(list fname arg)(app fname (parse arg))]
+    [(list f e)(app (parse f) (parse e))]
     
     )
   )
@@ -111,7 +110,7 @@
 
 
 ; interp :: ExprEnv -> val
-
+; with permite extender el environm
 
 (define (interp expr  env)
   (match expr
@@ -127,13 +126,10 @@
                          (interp et  env)
                          (interp ef  env))]
     [(with x e b) ; {with {x e} b}
-     (interp b fundefs (extend-env x (interp e fundefs env) env))]
-     ;(interp (subst x (parse (interp e interp)) b) fundefs env)]
-    [(app fname arg)
-     (def (fundef name argName body) (lookUpFundef fname fundefs ))
-     (interp body fundefs (extend-env argName (interp arg fundefs env) mtEnv))
-     ;(interp body fundefs (extend-env argName (interp arg fundefs env) env))
-     ;(interp (subst argName (parse (interp arg fundefs)) body) fundefs env)
+     (interp b  (extend-env x (interp e  env) env))]
+    [(app f e)
+     (def (fun arg body) (interp f env))
+     (interp body  (extend-env arg (interp e env) mtEnv))
      ]
 ))
 (define (count-fun expr )
@@ -156,7 +152,7 @@
      ]
 ))
 
-; run: Src list<fundef>? -> Expr
+
 ; corre un programa
 (define (run prog )
   
@@ -177,29 +173,21 @@
 (test (run '{with {x 3} {+ 1 {with {y 2} {+ x y}}}}) 6)
 (test (run '{with {x 3} {with {y {+ 2 x}} {+ x y}}}) 8)
 (test (run '{with {x 3} {if-tf #t {+ x 3} {+ x 9}}}) 6)
-(test (run '{foo 11} (list {list 'define '(foo x) '(+ x 5)})) 16)
-(test (run '{bar 11} (list {list 'define '(foo x) '(+ x 5)})) 16)
-(test (run '{add1 11} (list {list 'define '(add1 x) '(+ x 1)})) 12)
-(test (run '{foo 10} (list {list 'define '(add1 x) '(+ x 1)} {list 'define '(foo x) '(+ (add1 x) (add1 x)) })) 22)
+
+
 
 (test (run '{eqN? 1 0}) #f)
 (test (run '{* 2 3 }) 6)
 (test (run '{eqN? 3 3}) #t)
-(run '{foo 10} (list {list 'define '(add1 x) '(+ x 1)} {list 'define '(foo x) '(+ (add1 x) (add1 x)) }))
-(run '{fact 4} (list {list 'define '(fact x) '(if-tf (eqN? x 0) 1 (* x (fact (- x 1))))} ))
+
 (test (run '{evenN? 3}) #f)
 (test (run '{evenN? 2}) #t)
 (test (run '{evenN? 0}) #t)
 
-(test (count-fun (parse 2)) 0)
-(test (count-fun (parse '{+ 1 5 })) 0)
-(test (count-fun (parse '{{foo 3} {bar 5}})) 2)
-(test (count-fun (parse '{if-tf #t {foo 3} {bar 5}})) 2)
-;
-;{list 'define '(fact x) (if-tf (eq? x 0) 1 '(* x (fact (- x 1))))}
 
-(test (env-lookup 'c (aEnv 'c 5 (mtEnv))) 5)
-(test (env-lookup 'Prueba (aEnv 'Prueba 20 (aEnv 'c 5 (mtEnv)))) 20)
-(test (env-lookup 'c (aEnv 'Prueba 20 (aEnv 'c 5 (mtEnv)))) 5)
-(test (env-lookup 'c (aEnv 'c 20 (aEnv 'c 5 (mtEnv)))) 20)
+
+;(run '{foo 10} (list {list 'define '(add1 x) '(+ x 1)} {list 'define '(foo x) '(+ (add1 x) (add1 x)) }))
+;(run '{fact 4} (list {list 'define '(fact x) '(if-tf (eqN? x 0) 1 (* x (fact (- x 1))))} ))
+
+
 

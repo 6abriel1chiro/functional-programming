@@ -1,0 +1,21 @@
+#lang play
+#|
+<expr> ::=   <num> | <bool> | <id>
+            | (+ <expr> <expr>)
+            | (with <id> <expr> <expr>)
+            | (app <id> <expr>) 
+|#
+
+#|
+<FAE> ::=   <num> | <bool> | <id>
+            | (prim op-name <FAE> ... <FAE>)
+            | (if-tf <FAE> <FAE> <FAE>)
+            | (with <id> <FAE> <FAE>)
+            | (app <FAE> <FAE>) ; puedo aplicar una funcion a otra funcion / puedo usar una funcion como argumento. 
+            | (fun <id> <FAE>) ; fun(que es una lambda) nombre-arg body
+
+
+IMPLEMENTANTO PRIMITIVAS
+
+TESTS: 
+|#

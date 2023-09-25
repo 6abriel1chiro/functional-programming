@@ -1,6 +1,7 @@
 #lang play
 
 
+
 ; actualmente las funciones no son valores 
 #|
 <FAE> ::=    <num> | <bool> | <id>
@@ -14,14 +15,14 @@
 
 |#
 
+; F1WAE VS FAE : FAE ACEPTA FUNCIONES COMO VALORES
+
 
 ; funciones de orden superior (funciones de primera clase )
 
 (deftype Expr
   [num n]
   [bool b]
-  [add l r]
-  [sub l r]
   [if-tf c et ef]
   [with id-name named-expr body-expr]
   [id name]
@@ -30,6 +31,16 @@
   [mult x y]
   [app fName arg]
   [fun arg body]
+  [primitive name args]
+  )
+
+;assq busca x en list
+; apply : toma una funcion  y la aplica dentro de una list ejempli factorial
+(define primitives
+   (list
+   (cons '+ +)
+   (cons '- -)
+    )
   )
 
 
@@ -70,14 +81,14 @@
     [(? symbol?) (id src)]
     [(list 'eqN? x y) (eqN? (parse x) (parse y))]
     [(list 'evenN? x) (evenN? (parse x) )]
-    [(list '+ s1 s2) (add (parse s1) (parse s2))]
-    [(list '- s1 s2) (sub (parse s1) (parse s2))]
+
     [(list '* x y) (mult (parse x) (parse y))]
     [(list 'if-tf c et ef) (if-tf (parse c) (parse et) (parse ef))]
     [(list 'with (list x e) b) (with x (parse e) (parse b))]
-    ; {fun {x} body}
-    [(list 'fun (list x) body) (fun x (parse body)) ]
     [(list f e)(app (parse f) (parse e))]
+    ; {fun {x} body}
+    [(list 'fun (list x) body) (fun x (parse body))]
+    [(cons prim-name args) (primitive prim-name (map parse args))]
     
     )
   )
@@ -92,10 +103,9 @@
     [(bool b) e]
     [(id sym) (if (eq? x sym) v e)]
     [(eqN? n1 n2) (eqN? (subst x v n1) (subst x v n2))]
-    [(add l r) (add (subst x v l) (subst x v r))]
+ 
     [(evenN? n) (evenN? (subst x v n) )]
     [(mult l r) (mult (subst x v l) (subst x v r))]
-    [(sub l r) (sub (subst x v l) (subst x v r))]
     [(if-tf c et ef) (if-tf (subst x v c) (subst x v et) (subst x v ef))]
     [(with id ne b)
      (with id (subst x v ne)
@@ -107,40 +117,63 @@
    )
  )
 
-
+(deftype val
+  (valV v)
+  (closureV arg body env) ; closure = fun + env
+  )
 
 ; interp :: ExprEnv -> val
 ; with permite extender el environment
 ;interpreta expresiones
 (define (interp expr env)
   (match expr
-    [(num n) n]
-    [(bool b) b]
+    [(num n) (valV n)]
+    [(bool b) (valV b)]
     [(id x) (env-lookup x env)] ; buscar el valor de x
     [(mult x y) (* (interp x  env) (interp y  env))]
     [(eqN? x y) (= (interp x  env) (interp y  env))]
     [(evenN? n) (if (= (modulo (interp n  env) 2) 0) #t #f)]
-    [(add l r) (+ (interp l  env) (interp r  env))]
-    [(sub l r) (- (interp l  env) (interp r  env))]
+    [(primitive prim-name args) (prim-ops prim-name (map (λ (x) (interp x) args )))]
     [(if-tf c et ef) (if (interp c  env)
                          (interp et  env)
                          (interp ef  env))]
     [(with x e b) ; {with {x e} b}
      (interp b  (extend-env x (interp e env) env))]
-    [(fun x body) expr]
+    [(fun arg body) (closureV arg body env)]
     [(app f e)
-     (def (fun arg body) (interp f env))
-     (interp body  (extend-env arg (interp e env) mtEnv))
+     (def (closureV arg body fenv) (interp f env))
+     (interp body  (extend-env arg (interp e env) fenv)) ;mantenemos el scope estatico
      ]
 ))
 
+;apply
+;prim-ops
+(define (prim-ops name args)
+   (let ([vals (map (λ (x) (valV-v x)) args)])
+     (valV (apply (cdr {assq name primitives}) vals))
+     )
+  )
+
+#|
+;valV+ : valV valV -> valV
+(define (valV+ s1 s2)
+  (valV (+ (valV-v s1) (valV-v s2)))
+  )
+
+;valV- : valV valV -> valV
+(define (valV- s1 s2)
+  (valV (- (valV-v s1) (valV-v s2)))
+  )
+|#
 
 ; corre un programa
 (define (run prog )
-  
-  (interp (parse prog)  mtEnv)
-  )
-;
+  (let ([ res (interp (parse prog)  empty-env)])
+    (match res
+      [(valV v) v]
+      [(closureV arg body env) res]
+      )
+  ))
 
 (test (run '{+ 3 4}) 7)
 (test (run '{- 5 1}) 4)
@@ -186,7 +219,7 @@
 
 (run '{with {addN {fun {n}
                        {fun {m}
-                            {+ n m}}}
-                  }})
+                            {+ m n}}}}
+                  {{addN 10} 20}})
 
 

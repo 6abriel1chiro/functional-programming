@@ -202,34 +202,7 @@ Escribe pruebas (1pt)
 |#
 
 
-#|
-2.Extiende el lenguaje FAE con las operaciones lógicas and y or.
-Además, agrega soporte para strings y concatenación de cadenas.
-Escribe pruebas (1pt)
-|#
 
 
-#|
-3.Constant Folding
-Esta es una optimización utilizada en compiladores para eliminar el cálculo innecesario de expresiones constantes y reemplazarlas directamente con su valor.
-En general, si existe una operación que no contiene variables, se espera simplificarla.
- as siguientes pruebas deben pasar (2pt): 
-|#
 
 
-(test (constant-folding (parse '{with {x {+ 1 2 {* 3 4}}} {+ 1 x}}))
-      (parse '{with {x 15} {+ 1 x}}))
-(test (constant-folding (parse '{with {x {+ y 2 {* 3 4}}} {+ 1 x}}))
-      (parse '{with {x {+ y 2 12}} {+ 1 x}}))
-(test (constant-folding (parse '{if-tf {< x 1} {+ 3 3} {+ 5 9}}))
-      (parse '{if-tf {< x 1} 6 14}))
-(test (constant-folding (parse'{{fun {x} {+ x {* 2 4}}} {+ 5 5}}))
-      (parse '{{fun {x} {+ x 8}} 10}))
-
-
-#|
-3.Constant Folding
-Esta es una optimización utilizada en compiladores para eliminar el cálculo innecesario de expresiones constantes y reemplazarlas directamente con su valor.
-En general, si existe una operación que no contiene variables, se espera simplificarla.
- as siguientes pruebas deben pasar (2pt): 
-|#

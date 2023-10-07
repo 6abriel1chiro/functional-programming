@@ -5,6 +5,8 @@
 
 
 
+
+
 #|
 Práctica 3 - FAE
 
@@ -123,6 +125,54 @@ Asignatura: Programación Funcional
     )
   )
 
+
+
+
+
+(define (constant-folding expr)
+  (match expr
+    [(num n) expr] ; Los números son constantes y no se pueden simplificar más
+    [(bool b) expr] ; Lo mismo para los booleanos
+    [(id x) expr] ; Las variables no se pueden simplificar
+    
+    [(prim op args) ; Para operaciones primitivas
+     (let ([args (map constant-folding args)]) ; Simplificar recursivamente los argumentos
+       (if (andmap (λ (x) (match x [(num _) #t] [_ #f])) args) ; Si todos los argumentos son constantes
+           (num (apply (cdr (assq op primitives)) (map (λ (x) (match x [(num n) n])) args))) ; Realizar la operación y crear un nuevo nodo numérico
+           (prim op args)))] ; Si no todos los argumentos son constantes, mantener la estructura original
+    
+    [(if-tf c et ef) ; Para expresiones condicionales
+     (let ([c (constant-folding c)] [et (constant-folding et)] [ef (constant-folding ef)]) ; Simplificar recursivamente las partes
+       (if (and (match c [(num n) #t] [_ #f]) ; Si la condición es constante
+               (match et [(num n) #t] [_ #f]) ; y el caso verdadero es constante
+               (match ef [(num n) #t] [_ #f])) ; y el caso falso es constante
+           (if (num? c) et ef) ; Si la condición es verdadera, devolver el caso verdadero, si no, devolver el caso falso
+           (if-tf c et ef)))] ; Si alguna parte no es constante, mantener la estructura original
+    
+    [(with x e b) ; Para expresiones con let
+     (let ([e (constant-folding e)] [b (constant-folding b)]) ; Simplificar recursivamente las partes
+       (if (num? e) ; Si la expresión vinculada es constante
+           (subst b x e) ; Sustituir todas las ocurrencias de x en b con el valor de e
+           (with x e b)))] ; Si no, mantener la estructura original
+    
+    [(fun arg body) ; Para funciones
+     (let ([body (constant-folding body)]) ; Simplificar recursivamente el cuerpo de la función
+       (fun arg body))] ; Mantener la estructura original para las funciones
+    ))
+
+; Función auxiliar para sustituir variables
+(define (subst expr var val)
+  (match expr
+    [(num n) expr]
+    [(bool b) expr]
+    [(id x) (if (eq? x var) val expr)]
+    [(prim op args) (prim op (map (λ (x) (subst x var val)) args))]
+    [(if-tf c et ef) (if-tf (subst c var val) (subst et var val) (subst ef var val))]
+    [(with x e b) (if (eq? x var) expr (with x (subst e var val) (subst b var val)))]
+    [(fun arg body) (if (eq? arg var) expr (fun arg (subst body var val)))]))
+
+
+
 ; run: Src -> Src
 ; corre un programa
 (define (run prog)
@@ -227,9 +277,22 @@ En general, si existe una operación que no contiene variables, se espera simpli
       (parse '{{fun {x} {+ x 8}} 10}))
 
 
+
 #|
-3.Constant Folding
-Esta es una optimización utilizada en compiladores para eliminar el cálculo innecesario de expresiones constantes y reemplazarlas directamente con su valor.
-En general, si existe una operación que no contiene variables, se espera simplificarla.
- as siguientes pruebas deben pasar (2pt): 
+
+
+
+4.
 |#
+
+#|
+5.
+|#
+
+
+
+#|
+6.
+|#
+
+

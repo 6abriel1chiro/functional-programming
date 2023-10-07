@@ -281,9 +281,22 @@ En general, si existe una operación que no contiene variables, se espera simpli
 #|
 
 
+4. Constant Propagation.
+ Otra optimizacion en compiladores es constant propagation.Cuando se reconoce que un identificador es constante,
+entonces se reemplazan sus ocurrencias inmediatamente en lugar de mantener la substitución hasta el final.
+Las siguientes pruebas deben pasar (2pt): 
 
-4.
+(test (constant-propagation
+   (parse '{with {x 3} {+ x x}})) (parse '{with {x 3} {+ 3 3}}))
+(test (constant-propagation
+   (parse '{with {x 3} {with {y 5} {+ x y}}})) (parse '{with {x 3} {with {y 5} {+ 3 5}}}))
+(test (constant-propagation
+   (parse '{with {x 3} {with {y 5} {+ z z}}})) (parse '{with {x 3} {with {y 5} {+ z z}}}))
 |#
+
+
+
+
 
 #|
 5.

@@ -90,12 +90,11 @@ Asignatura: Programación Funcional
   )
 
 
-(parse (list with))
 
 (deftype Val
   (valV v) ; numero, booleano, string, byte, etc.
   (closureV arg body env) ; closure = fun + env
-
+(promiseV e env); promise = expr-L + env 
   )
 
 ; interp :: Expr  Env -> Val
@@ -114,7 +113,10 @@ Asignatura: Programación Funcional
     [(app f e)
      (def (closureV arg body fenv) (interp f env)) ; Esto permite encontrar (fun 'x (add (id 'x) (id 'x))) por ejemplo y tomar arg y body
     
-     (interp body (extend-env arg (interp e env) fenv)) ; parece que no funciona ni con estatico ni dinamico
+     (interp body (extend-env arg
+                              (promiseV e env)
+                              ;(interp e env) ; e-girl eval
+                              fenv)) ; parece que no funciona ni con estatico ni dinamico
      ]
 ))
 
@@ -125,13 +127,23 @@ Asignatura: Programación Funcional
     )
   )
 
+;strict -> Valv(valV/closureV/promiseV) -> Val (valV/closureV)
+; cumplidor de promesas
+(define (strict val)
+(match val
+  [(promiseV e env) (strict (interp e env))]
+  [else val]
+  )
+)
+
 ; run: Src -> Src
 ; corre un programa
 (define (run prog)
   (let ([res (interp (parse prog) empty-env)])
-    (match res
+    (match (strict res)
       [(valV v) v]
       [(closureV arg body env) res])
+    
     )
   )
 

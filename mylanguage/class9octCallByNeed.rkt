@@ -122,10 +122,11 @@ Asignatura: Programación Funcional
 
 ; prim-ops: op-name list[Val] -> Val
 (define (prim-ops op-name args)
-  (let ([vals (map (λ (x) (valV-v x)) args)])
-    (valV (apply (cdr (assq op-name primitives)) vals))
+  (let ([strict-args (map strict args)]) ; Evaluate arguments strictly
+    (valV (apply (cdr (assq op-name primitives)) (map valV-v strict-args)))
     )
   )
+
 
 ;strict -> Valv(valV/closureV/promiseV) -> Val (valV/closureV)
 ; cumplidor de promesas

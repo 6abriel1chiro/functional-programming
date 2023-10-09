@@ -4,7 +4,6 @@
 
 
 
-
 #|
 Práctica 3 - FAE
 
@@ -44,7 +43,7 @@ Asignatura: Programación Funcional
   [num n]                                 ; <num>
   [bool b]                                ; <bool>
   [if-tf c et ef]                         ; (if-tf <FAE> <FAE> <FAE>)
-  [with id-name named-expr body-expr]     ; (with <id> <FAE> <FAE>)
+  ;[with id-name named-expr body-expr]     ; (with <id> <FAE> <FAE>)
   [id name]                               ; <id> 
   [app fname arg-expr]                    ; (app <FAE> <FAE>) ; ahora podemos aplicar una funcion a otra
   [fun arg body]                          ; (fun <id> <FAE>) ; mantenemos el <id> como el nombre del argumento
@@ -83,12 +82,15 @@ Asignatura: Programación Funcional
     [(? boolean?) (bool src)]
     [(? symbol?) (id src)]
     [(list 'if-tf c et ef) (if-tf (parse c) (parse et) (parse ef))]
-    [(list 'with (list x e) b) (with x (parse e) (parse b))]
+    [(list 'with (list x e) b) (app (fun x (parse b)) (parse e))]
     [(list arg e) (app (parse arg) (parse e))]; 2. Subir de nivel nuestras funciones
     [(list 'fun (list arg) body) (fun arg (parse body))] ; 1. Agregar el caso del fun
     [(cons prim-name args) (prim prim-name (map parse args))]
     )
   )
+
+
+(parse (list with))
 
 (deftype Val
   (valV v) ; numero, booleano, string, byte, etc.
@@ -107,7 +109,7 @@ Asignatura: Programación Funcional
     [(if-tf c et ef) (if (interp c env)
                          (interp et env)
                          (interp ef env))]
-    [(with x e b) (interp b (extend-env x (interp e env) env))] ; Si asociamos una funcion a una variable, la funcion entra al env
+    ;[(with x e b) (interp b (extend-env x (interp e env) env))] ; Si asociamos una funcion a una variable, la funcion entra al env
     [(fun arg body) (closureV arg body env)] ; Por ahora, devolvemos la misma expresion que nos llego
     [(app f e)
      (def (closureV arg body fenv) (interp f env)) ; Esto permite encontrar (fun 'x (add (id 'x) (id 'x))) por ejemplo y tomar arg y body

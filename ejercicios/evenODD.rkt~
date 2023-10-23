@@ -1,0 +1,20 @@
+#lang play
+
+
+
+(define (isPar n)
+    (match res
+      [(= n 0) "par"]
+      [(= n 1) "impar"]
+      [ (odd (sub1 n))]
+      )
+
+  )
+
+(define (odd n)
+    (match res
+      [(= n 0) "par"]
+      [(= n 1) "impar"]
+      [_ (isPar (sub1 n))]
+      )
+  )

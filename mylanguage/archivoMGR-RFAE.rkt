@@ -1,7 +1,7 @@
 #lang play
 
 
-; FAE Y -> Recursive - Functions - Arithmetic - Expressions
+; RFAE -> Recursive - Functions - Arithmetic - Expressions
 
 #|
 <FAE> ::=   <num> | <bool> | <id>
@@ -33,14 +33,17 @@
   [app fname arg-expr]                    ; (app <FAE> <FAE>) ; ahora podemos aplicar una funcion a otra
   [fun arg body]                          ; (fun <id> <FAE>) ; mantenemos el <id> como el nombre del argumento
   [rec id-name named-expr body-expr]
-
 ) 
 
 
+#|
+<env> ::= (mtEnv)
+          | (aEnv <id> <val> <env>)
+          | (aRecEnv <id> <boxed-val> <env>)
+|#
 (deftype Env
   (mtEnv)
   (aEnv id val env)
-
   )
 
 ; empty-env -> (mtEnv)
@@ -68,15 +71,9 @@
     [(list '- s1 s2) (sub (parse s1) (parse s2))]
     [(list 'zero?? n) (zero (parse n))]
     [(list 'if-tf c et ef) (if-tf (parse c) (parse et) (parse ef))]
-    
     [(list 'with (list x e) b) (app (fun x (parse b)) (parse e))]
-    
-    ;[(list 'rec (list x e) b)
-     ;(parse `{with {,x ...} ,b})]
-
-     [(list 'rec (list x e) b)
-     (parse `(with {,x (Y (fun {,x} ,e ))},b))]
-   
+    [(list 'rec (list x e) b)
+     (parse `{with ...})]
     [(list arg e) (app (parse arg) (parse e))]; 2. Subir de nivel nuestras funciones
     [(list 'fun (list arg) body) (fun arg (parse body))] ; 1. Agregar el caso del fun
     )
@@ -107,7 +104,6 @@
     
      (interp body (extend-env arg (interp e env) fenv)) ; parece que no funciona ni con estatico ni dinamico
      ]
-
 ))
 
 
@@ -129,8 +125,6 @@ El interprete usa recursividad
 (define (zeroV n)
   (valV (eq? 0 (valV-v n))))
 
-; run: Src -> Src
-; corre un programa
 (define (run prog)
   (let* ([rec-env (extend-env 'Y (interp (parse '{fun {f} {with {h {fun {g} {fun {n} {{f {g g}} n}}}} {h h}}})
                                          empty-env) empty-env)]
@@ -154,12 +148,19 @@ El interprete usa recursividad
 (test (run '{with {x 3} {+ 1 {with {y 2} {+ x y}}}}) 6)
 (test (run '{with {x 3} {with {y {+ 2 x}} {+ x y}}}) 8)
 (test (run '{with {x 3} {if-tf {+ x 1} {+ x 3} {+ x 9}}}) 6)
+
+
+; Adaptando las pruebas previas
+;(test/exn (run '{f 10}) "undefined function") - el error partia de fundef-lookup
 (test/exn (run '{f 10}) "undefined")
 
+;(test (run '{f 10} (list '{define {f x} {+ x x}})) 20)
+; 1. Asociar la funcion a un identificador
 (test (run '{with {f {fun {x} {+ x x}}}{f 10}}) 20)
-
+; 2. Usar la funcion directamente, como un lambda
 (test (run '{{fun {x} {+ x x}} 10}) 20)
 
+;(test (run '{add1 {add1 {add1 10}}}(list '{define {add1 x} {+ x 1}})) 13)
 (test (run '{with {add1 {fun {x} {+ x 1}}}{add1 {add1 {add1 10}}}}) 13)
 
 (test (run '{with {add1 {fun {x} {+ x 1}}}
@@ -170,31 +171,27 @@ El interprete usa recursividad
                   {with {foo {fun {f} {+ {f 10} {f 10}}}}
                         {foo add1}}}) 22)
 
+
+; Pruebas para casos basicos
 (test (run '{{fun {x}{+ x 1}} {+ 2 3}}) 6)
 (test (run '{with {apply10 {fun {f} {f 10}}}
                   {with {add1 {fun {x} {+ x 1}}}
                         {apply10 add1}}}) 11)
 
+#|
+Sin embargo, la currificacion falla en la implementacion actual.
+
+
+|#
 
 (test (run '{with {addN {fun {n}
                        {fun {x} {+ x n}}}}
             {{addN 10} 20}}) 30)
 
-
-
-; poner por defecto el combinador Y en el environment
-;{fun {f} {with {h {fun {g} {fun {n} {{f {g g}} n}}}} {h h}}}
-
-
-
-(run 'Y)
-
+; 1. Poner por defecto el combinador Y en el enviromnent.
 
 (run '{rec {sum {fun {n}
                         {if-tf {zero?? n} 0 {+ n {sum {- n 1}}}}}} {sum 0}})
 
 (run '{rec {sum {fun {n}
                         {if-tf {zero?? n} 0 {+ n {sum {- n 1}}}}}} {sum 3}})
-
-
-

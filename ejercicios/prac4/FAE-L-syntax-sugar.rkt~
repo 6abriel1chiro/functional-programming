@@ -85,27 +85,10 @@ withN( (n 2) (m 3) (p 4) (+ n m p))
     ;azucar sintactico
     [(list 'supportmanyargs (list x vals)) (app (fun x (parse vals)))]
     [(list arg e) (app (parse arg) (parse e))]; 2. Subir de nivel nuestras funciones
-    [(list 'fun params body)
-     (if (list? params)
-         (parse-multi-arg-function params body)
-         (fun (list params) (parse body)))]
+    [(list 'fun (list arg) body) (fun arg (parse body))] ; 1. Agregar el caso del fun
     
-
-
-    
-
- 
     )
   )
-
-(define (parse-multi-arg-function params body)
-  (if (empty? params)
-      (parse body)
-      (fun (list (first params)) (parse-multi-arg-function (rest params) body))))
-
-
-
-
 
 (deftype Val
   (valV v) ; numero, booleano, string, byte, etc.
@@ -245,7 +228,6 @@ Sin embargo, la currificacion falla en la implementacion actual.
                     {with {x {+ y y}}
                           {+ x x}}}})
 
-(test (run '{{fun (a b) {+ a b}} {3 2}}) 5)
-(test (run '{{fun (a b c) {+ a {- b c}}} {3 2 1}}) 4)
+
 
 

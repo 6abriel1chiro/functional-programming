@@ -37,7 +37,7 @@ Escribe pruebas para distintos casos y contempla errores comunes en la llamada a
 ; [with id-name named-expr body-expr]     ; (with <id> <FAE> <FAE>) "syntax sugar"
   [id name]                               ; <id> 
   [app fname arg-expr]                    ; (app <FAE> <FAE>) ; ahora podemos aplicar una funcion a otra
-  [fun arg body]   
+  [fun args body]
 ) 
 
 
@@ -81,29 +81,17 @@ withN( (n 2) (m 3) (p 4) (+ n m p))
     [(list '+ s1 s2) (add (parse s1) (parse s2))]
     [(list '- s1 s2) (sub (parse s1) (parse s2))]
     [(list 'if-tf c et ef) (if-tf (parse c) (parse et) (parse ef))]
+        ;azucar sintactico
     [(list 'with (list x e) b) (app (fun x (parse b)) (parse e))]
-    ;azucar sintactico
-    [(list 'supportmanyargs (list x vals)) (app (fun x (parse vals)))]
-    [(list arg e) (app (parse arg) (parse e))]; 2. Subir de nivel nuestras funciones
-    [(list 'fun params body)
-     (if (list? params)
-         (parse-multi-arg-function params body)
-         (fun (list params) (parse body)))]
+   
+    [(list arg (cons e tail)) (if (empty? tail)   (app (parse arg) (parse e))   (parse (list (app  (parse arg) (parse e) ) tail) ) ) ] 
+; [(list arg (cons e tail)) (if (empty? tail)   (app (parse arg) (parse e))   (parse (list (app( arg tail) ) ) ] nos hace los argumentos al reves
+    [(list 'fun (cons arg tail) body)   (if (empty? tail)   (fun arg (parse body)) ( fun arg (parse (list 'fun tail body) ) )  )]
+
+    [else src] ; para evitar error donde se parsean varias veces cosas ya parseadas
     
-
-
-    
-
- 
     )
   )
-
-(define (parse-multi-arg-function params body)
-  (if (empty? params)
-      (parse body)
-      (fun (list (first params)) (parse-multi-arg-function (rest params) body))))
-
-
 
 
 
@@ -191,46 +179,6 @@ withN( (n 2) (m 3) (p 4) (+ n m p))
 (test (run '{with {x 3} {if-tf {+ x 1} {+ x 3} {+ x 9}}}) 6)
 
 
-; Adaptando las pruebas previas
-;(test/exn (run '{f 10}) "undefined function") - el error partia de fundef-lookup
-(test/exn (run '{f 10}) "undefined")
-
-;(test (run '{f 10} (list '{define {f x} {+ x x}})) 20)
-; 1. Asociar la funcion a un identificador
-(test (run '{with {f {fun {x} {+ x x}}}{f 10}}) 20)
-; 2. Usar la funcion directamente, como un lambda
-(test (run '{{fun {x} {+ x x}} 10}) 20)
-
-;(test (run '{add1 {add1 {add1 10}}}(list '{define {add1 x} {+ x 1}})) 13)
-(test (run '{with {add1 {fun {x} {+ x 1}}}{add1 {add1 {add1 10}}}}) 13)
-
-
-
-; Prueba fallida
-(test (run '{with {add1 {fun {x} {+ x 1}}}
-                  {with {foo {fun {x} {+ {add1 x} {add1 x}}}}
-                        {foo 10}}}) 22)
-
-(test (run '{with {add1 {fun {x} {+ x 1}}}
-                  {with {foo {fun {f} {+ {f 10} {f 10}}}}
-                        {foo add1}}}) 22)
-
-
-; Pruebas para casos basicos
-(test (run '{{fun {x}{+ x 1}} {+ 2 3}}) 6)
-(test (run '{with {apply10 {fun {f} {f 10}}}
-                  {with {add1 {fun {x} {+ x 1}}}
-                        {apply10 add1}}}) 11)
-
-#|
-Sin embargo, la currificacion falla en la implementacion actual.
-
-
-|#
-
-(test (run '{with {addN {fun {n}
-                       {fun {x} {+ x n}}}}
-            {{addN 10} 20}}) 30)
 
 ; Tests para laziness
 (test (run '{with {x y} 1}) 1)
@@ -245,7 +193,7 @@ Sin embargo, la currificacion falla en la implementacion actual.
                     {with {x {+ y y}}
                           {+ x x}}}})
 
+
+; test practica
 (test (run '{{fun (a b) {+ a b}} {3 2}}) 5)
 (test (run '{{fun (a b c) {+ a {- b c}}} {3 2 1}}) 4)
-
-

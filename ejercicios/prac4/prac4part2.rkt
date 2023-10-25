@@ -198,3 +198,13 @@ El interprete usa recursividad
 
 
 
+
+
+(test (run '{rec {sum {fun {n}
+                        {if-tf {zero?? n} 0 {+ n {sum {- n 1}}}}}} {sum 0}}) 0)
+
+(test (run '{rec {sum {fun {n}
+                        {if-tf {zero?? n} 0 {+ n {sum {- n 1}}}}}} {sum 3}}) 6)
+
+(test (run '{rec {sum {fun {n}
+                       {if-tf {zero?? n} 0 {+ n {sum {- n 1}}}}}} {sum 10}}) 55)

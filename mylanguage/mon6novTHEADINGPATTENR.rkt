@@ -178,14 +178,33 @@ Ahi si hay problemas con los argumentos, podemos hacer el sistema de tipos.
      (interp ef env c-sto))]
     [(newbox b)
      ;1. crear direccion de memoria
-     (def new-loc (malloc mtSto))
+     ;(def new-loc (malloc sto))
      ;2. interp b
-     (interp b)
+     (def (v*s b-val b-sto) (interp b env sto))
+     (def new-loc (malloc b-sto))
      ;3 retornar con store actualizado
-     (boxV new-loc)
+     (v*s (boxV new-loc) (extend-sto new-loc b-val b-sto))
      ]
-    
-    [(app f e)
+
+    [(openbox b)
+     ;1. interp b
+     (def (v*s (boxV l) b-sto) (interp b env sto))
+     ;2  sto-lookup boxV
+      (v*s  (sto-lookup l b-sto) b-sto)
+
+     ]
+
+
+      [(setbox b n)
+     ;1. interp b
+      (def (v*s (boxV loc) b-sto) (interp b env sto))
+     ;2  interp n
+      (def (v*s n-val n-sto) (interp n env b-sto))
+      ;3. actualizar sto
+      (v*s (boxV loc) (extend-sto loc n-val n-sto))
+     ]
+
+        [(app f e)
      ;1 interp f
      (def (v*s (closureV arg body fenv) fun-sto) (interp f env sto))
      ; 2 interp e
@@ -195,6 +214,17 @@ Ahi si hay problemas con los argumentos, podemos hacer el sistema de tipos.
      ;4 extender env
      (interp body (extend-env arg new-loc fenv)
              (extend-sto   new-loc arg-val arg-sto ))]
+
+    [(seqn e1 e2)
+     ;1. interp e1
+     (def (v*s e1-val e1-sto) (interp e1 env sto))
+     ;2. interp e2 (con lo ultimo)
+     (interp e2 env e1-sto)
+     ;3 return e2
+     
+     ]
+    ;interp body (extend-env (interp e env) env)
+
 
 ))
 
@@ -259,6 +289,34 @@ Ahi si hay problemas con los argumentos, podemos hacer el sistema de tipos.
 (test (run '{with {addN {fun {n}
                        {fun {x} {+ x n}}}}
             {{addN 10} 20}}) 30)
+
+
+
+(run '(newbox (+ 1 2)))
+
+(test (run '{with {b {newbox 10}}
+                  {seqn
+                   {setbox b 20}
+                   {openbox b}}}) 20)
+
+
+
+(test (run '{with {b {newbox 10}}
+  {seqn
+       {setbox b {+ 1{openbox b}}}
+       {openbox b}}
+}) 11)
+
+(test/exn (run '{with {a {newbox 0}}
+            {seqn {with {b 3} b}
+                  b}}) "undefined")
+
+(test (run '{with {a {newbox 0}}
+            {with {f {fun {x} {+ x {openbox a}}}}
+                  {seqn
+                   {setbox a 2}
+                   {f 5}}}}) 7)
+
 
 
 #|

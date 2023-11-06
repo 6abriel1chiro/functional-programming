@@ -117,16 +117,18 @@ Ahi si hay problemas con los argumentos, podemos hacer el sistema de tipos.
   )
 
 
+;4. incluir un nuevo tipo de valor v*s
 
 (deftype Val
   (valV v) ; numero, booleano, string, byte, etc.
   (closureV arg body env) ; closure = fun + env
   (v*s val sto) ; 3. soporte para val-sto par
+  (boxV loc)
   )
 
 
 
-;4. actualizar interp
+;3. actualizar interp
 ; interp :: Expr  Env sto -> [val*sto]
 ; interpreta una expresion
 (define (interp expr env sto)

@@ -42,8 +42,15 @@ Ahi si hay problemas con los argumentos, podemos hacer el sistema de tipos.
   [id name]                               ; <id> 
   [app fname arg-expr]                    ; (app <FAE> <FAE>) ; ahora podemos aplicar una funcion a otra
   [fun arg body]                          ; (fun <id> <FAE>) ; mantenemos el <id> como el nombre del argumento
+  [newbox b] ; newbox 4
+  [openbox b]
+  [setbox b n] ; [setbox (newbox 4) 5]
+  [seqn e1 e2]
   
-) 
+)
+
+; forma mas directa de aceptar n argumentos : concatenar (parser por debajo)
+
 
 ;1 actualizar environment
 
@@ -111,6 +118,10 @@ Ahi si hay problemas con los argumentos, podemos hacer el sistema de tipos.
     [(list '- s1 s2) (sub (parse s1) (parse s2))]
     [(list 'if-tf c et ef) (if-tf (parse c) (parse et) (parse ef))]
     [(list 'with (list x e) b) (app (fun x (parse b)) (parse e))]
+    [(list 'newbox b) (newbox (parse b))]
+    [(list 'openbox e) (openbox (parse e))]
+    [(list 'setbox b v) (setbox (parse b) (parse v))]
+    [(list 'seqn e1 e2) (seqn (parse e1) (parse e2))]
     [(list arg e) (app (parse arg) (parse e))]
     [(list 'fun (list arg) body) (fun arg (parse body))]
     )
@@ -165,7 +176,14 @@ Ahi si hay problemas con los argumentos, podemos hacer el sistema de tipos.
     (if (valV-v c-val)
      (interp et env c-sto)
      (interp ef env c-sto))]
-
+    [(newbox b)
+     ;1. crear direccion de memoria
+     (def new-loc (malloc mtSto))
+     ;2. interp b
+     (interp b)
+     ;3 retornar con store actualizado
+     (boxV new-loc)
+     ]
     
     [(app f e)
      ;1 interp f
@@ -203,7 +221,10 @@ Ahi si hay problemas con los argumentos, podemos hacer el sistema de tipos.
   (def (v*s res sto) (interp (parse prog) empty-env empty-sto))
     (match res
       [(valV v) v]
-      [(closureV arg body env) res])
+      [(closureV arg body env) res]
+      [(boxV loc) res]
+
+      )
     )
   
 
